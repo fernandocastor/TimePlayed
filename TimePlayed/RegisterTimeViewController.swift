@@ -60,12 +60,6 @@ class RegisterTimeViewController: UIViewController, UITextFieldDelegate, UIImage
     gameImage = UIImageView(frame: CGRect(x: 5, y: 5, width: width - 10, height: height - 10))
     gameImage?.translatesAutoresizingMaskIntoConstraints = false
     gameImage?.contentMode = .scaleAspectFit
-    var imgSel = UIImage(named: "imageSelectionBorder")
-    print(width)
-    print(height)
-    print("the image")
-    print(imgSel!.size.width)
-    print(imgSel!.size.height)
     gameImage?.image = UIImage(named: "imageSelectionBorder")
     gameImage?.backgroundColor = UIColor(red: 1, green: 100/255, blue: 100/255, alpha:1.0)
     
@@ -77,12 +71,25 @@ class RegisterTimeViewController: UIViewController, UITextFieldDelegate, UIImage
     selectImage.textColor = .white
     selectImage.font = selectImage.font.withSize(28)
     
+    let logTime  = UIButton()
+    logTime.titleEdgeInsets = UIEdgeInsets(top: 10, left: 15, bottom: 15, right: 10)
+    logTime.setTitle("Log Time", for: .normal)
+    logTime.translatesAutoresizingMaskIntoConstraints = false
+    logTime.layer.borderWidth = 1.0
+    logTime.layer.cornerRadius = 5.0
+    logTime.backgroundColor = .clear
+    logTime.layer.borderColor = UIColor.black.cgColor
+    logTime.titleLabel?.sizeToFit()
+    
+    
+    
     self.view.addSubview(date)
     self.view.addSubview(gameName)
     self.view.addSubview(timePlayed)
     self.view.addSubview(gameImage!)
     self.view.addSubview(selectImage)
     self.view.bringSubviewToFront(selectImage)
+    self.view.addSubview(logTime)
     
     // Setting Autolayout Constraints
     // This first constraint must set the top anchor of the first component to the equal
@@ -111,6 +118,9 @@ class RegisterTimeViewController: UIViewController, UITextFieldDelegate, UIImage
     
     selectImage.centerYAnchor.constraint(equalTo: gameImage!.centerYAnchor).isActive = true
     selectImage.centerXAnchor.constraint(equalTo: gameImage!.centerXAnchor).isActive = true
+    
+    logTime.topAnchor.constraint(equalTo: gameImage!.bottomAnchor).isActive = true
+    
   }
   
   
@@ -119,18 +129,18 @@ class RegisterTimeViewController: UIViewController, UITextFieldDelegate, UIImage
   // case, uses maxWidth and breaks the proportions.
   func resizeImage(image: UIImage, height: CGFloat, maxWidth: CGFloat) -> UIImage {
     let newWidth = min((height * image.size.width)/image.size.height, maxWidth)
-
+    
     let newSize = CGSize(width: newWidth, height: height)
     let rect = CGRect(x: 0, y: 0, width: newSize.width, height: newSize.height)
-
+    
     UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
     image.draw(in: rect)
     let newImage = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()
-     
+    
     return newImage!
   }
-    
+  
   @objc private func openGameImage(_ recognizer: UITapGestureRecognizer) {
     // In order to access the photo library, we need permissions. Set them up at info.plist.
     // Privacy - Photo Library Usage Description
@@ -154,8 +164,8 @@ class RegisterTimeViewController: UIViewController, UITextFieldDelegate, UIImage
     print(height)
     
     self.gameImage!.image = resizeImage(image: image, height: IDEAL_IMAGE_HEIGHT, maxWidth: IDEAL_IMAGE_WIDTH)
-      
-      
+    
+    
     self.selectImage.isHidden = true
     picker.dismiss(animated: true, completion: nil)
   }
@@ -166,12 +176,12 @@ class RegisterTimeViewController: UIViewController, UITextFieldDelegate, UIImage
     picker.dismiss(animated: true, completion: nil)
   }
   
-  
   // Function to remove the keyboard once the user touches return
   func textFieldShouldReturn(_ textField: UITextField) -> Bool {
     textField.resignFirstResponder()
     return true
     
   }
+  
 }
 
