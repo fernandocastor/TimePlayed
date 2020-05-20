@@ -7,13 +7,20 @@
 //
 
 import UIKit
+import Photos
 
-class RegisterTimeViewController: UIViewController, UITextFieldDelegate {
+class RegisterTimeViewController: UIViewController, UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
   
   // Three different types of constraints.
   //  private var compactConstraints: [NSLayoutConstraint] = []
   //private var regularConstraints: [NSLayoutConstraint] = []
   //private var sharedConstraints: [NSLayoutConstraint] = []
+  
+  var gameImage:UIImageView?
+  let  selectImage = UILabel()
+  
+  let IDEAL_IMAGE_WIDTH:CGFloat = 333
+  let IDEAL_IMAGE_HEIGHT:CGFloat = 265
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -50,16 +57,21 @@ class RegisterTimeViewController: UIViewController, UITextFieldDelegate {
     
     let width = UIScreen.main.bounds.width
     let height = UIScreen.main.bounds.height/3
-    let gameImage = UIImageView(frame: CGRect(x: 5, y: 5, width: width - 10, height: height - 10))
-    gameImage.translatesAutoresizingMaskIntoConstraints = false
-    gameImage.contentMode = .scaleAspectFit
-    gameImage.image = UIImage(named: "imageSelectionBorder")
-    gameImage.backgroundColor = UIColor(red: 1, green: 100/255, blue: 100/255, alpha:1.0)
+    gameImage = UIImageView(frame: CGRect(x: 5, y: 5, width: width - 10, height: height - 10))
+    gameImage?.translatesAutoresizingMaskIntoConstraints = false
+    gameImage?.contentMode = .scaleAspectFit
+    var imgSel = UIImage(named: "imageSelectionBorder")
+    print(width)
+    print(height)
+    print("the image")
+    print(imgSel!.size.width)
+    print(imgSel!.size.height)
+    gameImage?.image = UIImage(named: "imageSelectionBorder")
+    gameImage?.backgroundColor = UIColor(red: 1, green: 100/255, blue: 100/255, alpha:1.0)
     
-    gameImage.isUserInteractionEnabled = true
-    gameImage.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(openGameImage)))
-
-    let  selectImage = UILabel()
+    gameImage?.isUserInteractionEnabled = true
+    gameImage?.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(openGameImage)))
+    
     selectImage.text = "Select an Image"
     selectImage.translatesAutoresizingMaskIntoConstraints = false
     selectImage.textColor = .white
@@ -68,7 +80,7 @@ class RegisterTimeViewController: UIViewController, UITextFieldDelegate {
     self.view.addSubview(date)
     self.view.addSubview(gameName)
     self.view.addSubview(timePlayed)
-    self.view.addSubview(gameImage)
+    self.view.addSubview(gameImage!)
     self.view.addSubview(selectImage)
     self.view.bringSubviewToFront(selectImage)
     
@@ -93,23 +105,69 @@ class RegisterTimeViewController: UIViewController, UITextFieldDelegate {
     timePlayed.rightAnchor.constraint(equalTo: self.view.rightAnchor).isActive = true
     timePlayed.heightAnchor.constraint(equalToConstant: view.frame.height/8).isActive = true
     
-    gameImage.topAnchor.constraint(equalTo: timePlayed.bottomAnchor).isActive = true
-    gameImage.leftAnchor.constraint(equalTo: self.view.leftAnchor).isActive = true
-    gameImage.rightAnchor.constraint(equalTo: self.view.rightAnchor).isActive = true
-        
-    selectImage.centerYAnchor.constraint(equalTo: gameImage.centerYAnchor).isActive = true
-    selectImage.centerXAnchor.constraint(equalTo: gameImage.centerXAnchor).isActive = true
-    //    selectImage.topAnchor.constraint(equalTo: gameImage.topAnchor).isActive = true
-    //    selectImage.heightAnchor.constraint(equalToConstant: gameImage.bounds.height/2).isActive = true
+    gameImage!.topAnchor.constraint(equalTo: timePlayed.bottomAnchor).isActive = true
+    gameImage!.leftAnchor.constraint(equalTo: self.view.leftAnchor).isActive = true
+    gameImage!.rightAnchor.constraint(equalTo: self.view.rightAnchor).isActive = true
+    
+    selectImage.centerYAnchor.constraint(equalTo: gameImage!.centerYAnchor).isActive = true
+    selectImage.centerXAnchor.constraint(equalTo: gameImage!.centerXAnchor).isActive = true
   }
   
+  
+  // Resizes an image based on its height. Attempts to resize the
+  // width proportionally unless it is greater than maxWidth. In this
+  // case, uses maxWidth and breaks the proportions.
+  func resizeImage(image: UIImage, height: CGFloat, maxWidth: CGFloat) -> UIImage {
+    let newWidth = min((height * image.size.width)/image.size.height, maxWidth)
+
+    let newSize = CGSize(width: newWidth, height: height)
+    let rect = CGRect(x: 0, y: 0, width: newSize.width, height: newSize.height)
+
+    UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+    image.draw(in: rect)
+    let newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+     
+    return newImage!
+  }
+    
   @objc private func openGameImage(_ recognizer: UITapGestureRecognizer) {
+    // In order to access the photo library, we need permissions. Set them up at info.plist.
+    // Privacy - Photo Library Usage Description
+    if UIImagePickerController.isSourceTypeAvailable(.photoLibrary) {
+      let imagePickerController = UIImagePickerController()
+      imagePickerController.delegate = self
+      imagePickerController.sourceType = .photoLibrary
+      self.present(imagePickerController, animated: true, completion: nil)
+    }
     print("tapped!")
-    
-    // Check this, maybe: https://stackoverflow.com/questions/52399079/accessing-the-camera-and-photo-library-in-swift-4
-    
   }
   
+  // Called when the image is selected.
+  func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+    // self from dismiss's context.
+    guard let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else { return }
+    
+    let width:CGFloat = self.gameImage!.frame.width
+    let height:CGFloat = self.gameImage!.frame.height
+    print(width)
+    print(height)
+    
+    self.gameImage!.image = resizeImage(image: image, height: IDEAL_IMAGE_HEIGHT, maxWidth: IDEAL_IMAGE_WIDTH)
+      
+      
+    self.selectImage.isHidden = true
+    picker.dismiss(animated: true, completion: nil)
+  }
+  
+  // Required by UIImagePickerViewDelegate. Dismisses the picker
+  // without selecting any images.
+  func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+    picker.dismiss(animated: true, completion: nil)
+  }
+  
+  
+  // Function to remove the keyboard once the user touches return
   func textFieldShouldReturn(_ textField: UITextField) -> Bool {
     textField.resignFirstResponder()
     return true
